@@ -55,7 +55,7 @@ def setup_logging(
         diagnose=True
     )
     
-    logger.info(f"Logging initialized - Level: {log_level}, File: {log_file}")
+    logger.debug(f"Logging initialized - Level: {log_level}, File: {log_file}")
 
 
 def get_logger(name: str):
