@@ -1,0 +1,7 @@
+# Blank lines and comments are acceptable
+# Any lines not beginning with http will be ignored
+
+https://meta.ua/uk/news/weather/duzhe-holodnii-start-zhovtnya-didenko-poperedila-pro-doschi-ta-6c-v-ukrayini-899952/
+https://censor.net/biz/news/3577064/pryvatbank-organizuvav-navchalni-festyvali-z-fingramotnosti-dlya-diteyi
+
+--- end of the list ---
