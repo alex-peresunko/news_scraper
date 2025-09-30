@@ -8,8 +8,10 @@ import re
 import time
 from typing import List, Optional
 from urllib.parse import urljoin, urlparse
+from pydantic import HttpUrl
 
 
+from news_scraper.core.genai import analyze_article_content
 from news_scraper.config.settings import settings_instance as settings
 from news_scraper.models.article import Article
 from news_scraper.utils.logging import logger
@@ -129,8 +131,11 @@ class NewsScraper:
                     logger.warning(f"No title or text found for URL: {url}")
                     return None
                 
+                # Analyze the article content using GenAI
+                summary, topics = await analyze_article_content(article.text)
+                
                 scraped_article = Article(
-                    url=url,
+                    url=HttpUrl(url),
                     title=article.title.strip(),
                     content=article.text.strip(),
                     authors=article.authors or [],
@@ -138,7 +143,9 @@ class NewsScraper:
                     top_image=article.top_image,
                     meta_description=article.meta_description or "",
                     meta_keywords=article.meta_keywords or [],
-                    source_domain=urlparse(url).netloc
+                    source_domain=urlparse(url).netloc,
+                    summary=summary,
+                    topics=topics
                 )
                 
                 logger.success(f"Successfully scraped: {url}")

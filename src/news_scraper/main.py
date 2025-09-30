@@ -35,7 +35,7 @@ def main():
             logger.info(f"Scraped {len(articles)} articles")
                 
         for article in articles:
-            logger.info(f"Title: {article.title}, URL: {article.url}")
+            logger.info(f"Title: {article.title}, URL: {article.url}, Summary: {article.summary}, Topics: {article.topics}")
 
     import asyncio
     asyncio.run(run_scraper())
