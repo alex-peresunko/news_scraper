@@ -19,13 +19,11 @@ class Settings(BaseSettings):
     # Application settings
     app_name: str = Field(default="News Scraper", description="Application name")
     app_version: str = Field(default="0.0.1", description="Application version")
-    debug: bool = Field(default=False, description="Debug mode")
     
     # OpenAI Configuration
     openai_api_key: str = Field(description="OpenAI API key")
     openai_model: str = Field(default="gpt-3.5-turbo", description="OpenAI model to use")
     openai_temperature: float = Field(default=0.1, description="OpenAI temperature")
-    openai_max_tokens: int = Field(default=2000, description="OpenAI max tokens")
 
     # LlamaIndex Configuration
     llama_similarity_top_k: int = Field(default=5, description="LlamaIndex similarity top K")
@@ -57,10 +55,7 @@ class Settings(BaseSettings):
         default="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
         description="Log format"
     )
-    
-    # Database Configuration
-    database_url: str = Field(default="sqlite:///./data/news_scraper.db", description="Database URL")
-    
+
     @property
     def project_root(self) -> Path:
         """Get project root directory."""

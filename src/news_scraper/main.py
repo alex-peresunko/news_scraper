@@ -34,7 +34,7 @@ def main():
             return
         
         # Database will be created in data/db folder if it doesn't exist
-        db = ChromaDBClient(db_path="./data/db", collection_name="news_articles")
+        db = ChromaDBClient(db_path="./data/db", collection_name=settings.vector_db_collection_name)
 
         async def run_scraper():
             async with NewsScraper() as news_scraper:
