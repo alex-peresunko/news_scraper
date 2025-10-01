@@ -1,0 +1,10 @@
+beautifulsoup4==4.14.2
+chromedriver_autoinstaller==0.6.4
+loguru==0.7.3
+news_scraper==0.1.0
+news_scraper.egg==info
+newspaper3k==0.2.8
+openai==2.0.0
+pydantic==2.11.9
+pydantic_settings==2.11.0
+selenium==4.35.0
