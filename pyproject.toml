@@ -4,6 +4,18 @@ version = "0.1.0"
 description = "A simple news scraper application."
 readme = "README.md"
 requires-python = ">=3.8"
+dependencies = [
+    "beautifulsoup4>=4.14.2",
+    "chromedriver-autoinstaller>=0.6.4",
+    "chromadb>=0.4.22",
+    "loguru>=0.7.3",
+    "newspaper3k>=0.2.8",
+    "openai>=2.0.0",
+    "pydantic>=2.11.9",
+    "pydantic-settings>=2.11.0",
+    "selenium>=4.35.0",
+    "lxml-html-clean>=0.4.2",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

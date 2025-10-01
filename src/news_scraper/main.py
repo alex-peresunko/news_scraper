@@ -5,6 +5,7 @@
 from news_scraper.utils.logging import logger
 from news_scraper.config.settings import settings_instance as settings
 from news_scraper.core.scraper import NewsScraper
+from news_scraper.db import ChromaDBClient
 from news_scraper.utils.arg_parser import arg_parser
 from news_scraper.utils.helpers import is_valid_url
 
@@ -29,16 +30,29 @@ def main():
         logger.error(f"An error occurred while reading the file: {e}")
         return
     
+    # Database will be created in data/db folder if it doesn't exist
+    db = ChromaDBClient(db_path="./data/db", collection_name="news_articles")
+
     async def run_scraper():
         async with NewsScraper() as news_scraper:
             articles = await news_scraper.scrape_urls(urls)
             logger.info(f"Scraped {len(articles)} articles")
+        return articles
                 
-        for article in articles:
-            logger.info(f"Title: {article.title}, URL: {article.url}, Summary: {article.summary}, Topics: {article.topics}")
-
     import asyncio
-    asyncio.run(run_scraper())
+    articles = asyncio.run(run_scraper())
+
+    for article in articles:
+        # Store a single article
+        success = db.store_article(article)
+        logger.debug(f"Article stored: {success}")
+        # logger.debug(f"Title: {article.title}\n URL: {article.url}\n Summary: {article.summary}\n Content: {article.content}\n Topics: {article.topics}")
+    
+    all_articles = db.get_all_articles()
+    logger.debug(f"Total articles saved in database: {len(all_articles)}")
+    for art in all_articles:
+        logger.debug(f"Article ID: {art['id']}, Title: {art['metadata']['title']}")
+
 
 if __name__ == "__main__":
     main()

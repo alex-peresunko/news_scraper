@@ -1,5 +1,6 @@
 beautifulsoup4==4.14.2
 chromedriver_autoinstaller==0.6.4
+chromadb==1.1.0
 loguru==0.7.3
 news_scraper==0.1.0
 newspaper3k==0.2.8
