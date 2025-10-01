@@ -1,25 +1,28 @@
 [project]
 name = "news_scraper"
-version = "0.1.0"
+version = "0.0.1"
 description = "A simple news scraper application."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 dependencies = [
-    "beautifulsoup4>=4.14.2",
-    "chromedriver-autoinstaller>=0.6.4",
-    "chromadb>=0.4.22",
-    "loguru>=0.7.3",
-    "newspaper3k>=0.2.8",
-    "openai>=2.0.0",
-    "pydantic>=2.11.9",
-    "pydantic-settings>=2.11.0",
-    "selenium>=4.35.0",
-    "lxml-html-clean>=0.4.2",
-    "llama-index>=0.10.0",
-    "llama-index-vector-stores-chroma>=0.1.0",
-    "llama-index-llms-openai>=0.1.0",
-    "llama-index-embeddings-openai>=0.1.0",
+    "beautifulsoup4",
+    "chromedriver-autoinstaller",
+    "chromadb",
+    "loguru",
+    "newspaper3k",
+    "openai",
+    "pydantic",
+    "pydantic-settings",
+    "selenium",
+    "lxml-html-clean",
+    "llama-index",
+    "llama-index-vector-stores-chroma",
+    "llama-index-llms-openai",
+    "llama-index-embeddings-openai",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tools.black]
+target-version = ['py312']

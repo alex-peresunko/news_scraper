@@ -1,5 +1,3 @@
-import os
-
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.llms.openai import OpenAI
@@ -14,7 +12,7 @@ from news_scraper.db import ChromaDBClient
 # Configure the embedding model BEFORE creating any indices
 # This ensures LlamaIndex uses OpenAI embeddings (1536 dimensions)
 embed_model = OpenAIEmbedding(
-    model="text-embedding-3-small",  # or "text-embedding-ada-002"
+    model=settings.embedding_model,
     api_key=settings.openai_api_key
 )
 Settings.embed_model = embed_model
