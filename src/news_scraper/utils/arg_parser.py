@@ -13,10 +13,17 @@ class ArgParser:
         self.parser.add_argument(
             "--urls-file",
             type=str,
-            required=True,
+            required=False,
             help="Path to a text file containing URLs to scrape (one URL per line).",
         )
-        # Future arguments can be added here
+        self.parser.add_argument(
+            "--query",
+            type=str,
+            required=False,
+            default="What are the latest news articles?",
+            nargs="?",
+            help="Query string to ask the LLM about the scraped articles.",
+        )
 
     def parse_args(self):
         """Parses and returns command-line arguments."""

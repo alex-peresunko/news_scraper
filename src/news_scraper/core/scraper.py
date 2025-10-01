@@ -132,14 +132,13 @@ class NewsScraper:
                     return None
                 
                 # Analyze the article content using GenAI
-                summary, topics = await analyze_article_content(article.text)
+                summary, topics = await analyze_article_content(url, article.text)
                 
                 scraped_article = Article(
                     url=HttpUrl(url),
                     title=article.title.strip(),
                     content=article.text.strip(),
                     authors=article.authors or [],
-                    # publish_date=article.publish_date,
                     top_image=article.top_image,
                     meta_description=article.meta_description or "",
                     meta_keywords=article.meta_keywords or [],
@@ -149,6 +148,7 @@ class NewsScraper:
                 )
                 
                 logger.success(f"Successfully scraped: {url}")
+                logger.debug(f"Analyzed data for URL {url}\nTitle: {scraped_article.title}\nSummary: {scraped_article.summary}\nTopics: {scraped_article.topics}")
                 
                 if settings.rate_limit_delay > 0:
                     await asyncio.sleep(settings.rate_limit_delay)

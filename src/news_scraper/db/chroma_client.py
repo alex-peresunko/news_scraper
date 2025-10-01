@@ -1,7 +1,7 @@
 """ChromaDB client for storing and retrieving news articles."""
 
 import json
-from datetime import datetime
+import tiktoken
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
@@ -9,13 +9,18 @@ import chromadb
 from chromadb.api import ClientAPI
 from chromadb.api.models.Collection import Collection
 from chromadb.config import Settings as ChromaSettings
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 from loguru import logger
 
 from news_scraper.models.article import Article
+from news_scraper.config.settings import settings_instance as settings
 
 
 class ChromaDBClient:
     """ChromaDB client for managing news articles."""
+    
+    # Maximum tokens for the embedding model (with safety margin)
+    MAX_EMBEDDING_TOKENS = 8000  # Leave some buffer from the 8192 limit
     
     def __init__(self, db_path: str = "./data/db", collection_name: str = "news_articles"):
         """
@@ -29,6 +34,13 @@ class ChromaDBClient:
         self.collection_name = collection_name
         self._client: ClientAPI
         self._collection: Collection
+        
+        # Initialize tokenizer for text-embedding-ada-002 (cl100k_base encoding)
+        try:
+            self._tokenizer = tiktoken.encoding_for_model("text-embedding-ada-002")
+        except Exception as e:
+            logger.warning(f"Failed to load model-specific tokenizer: {e}. Using cl100k_base encoding.")
+            self._tokenizer = tiktoken.get_encoding("cl100k_base")
         
         # Ensure database directory exists
         self.db_path.mkdir(parents=True, exist_ok=True)
@@ -47,10 +59,18 @@ class ChromaDBClient:
                 )
             )
             
-            # Get or create collection
+            # Create OpenAI embedding function
+            # This ensures ChromaDB uses OpenAI embeddings (1536 dimensions)
+            embedding_function = OpenAIEmbeddingFunction(
+                api_key=settings.openai_api_key,
+                model_name=settings.embedding_model
+            )
+            
+            # Get or create collection with OpenAI embeddings
             self._collection = self._client.get_or_create_collection(
                 name=self.collection_name,
-                metadata={"description": "News articles collection"}
+                metadata={"description": "News articles collection"},
+                embedding_function=embedding_function # type: ignore
             )
             
             logger.info(f"ChromaDB initialized at {self.db_path}")
@@ -60,12 +80,101 @@ class ChromaDBClient:
             logger.error(f"Failed to initialize ChromaDB: {e}")
             raise
     
-    def _article_to_metadata(self, article: Article) -> Dict[str, Any]:
+    def _count_tokens(self, text: str) -> int:
+        """
+        Count tokens in text using the OpenAI tokenizer.
+        
+        Args:
+            text: Text to count tokens for
+            
+        Returns:
+            Number of tokens
+        """
+        return len(self._tokenizer.encode(text))
+    
+    def _chunk_text(self, text: str, max_tokens: int) -> List[str]:
+        """
+        Split text into chunks that don't exceed max_tokens.
+        Uses sentence-based chunking for better semantic coherence.
+        
+        Args:
+            text: Text to chunk
+            max_tokens: Maximum tokens per chunk
+            
+        Returns:
+            List of text chunks
+        """
+        # Split by sentences (simple approach)
+        sentences = text.replace('\n', ' ').split('. ')
+        
+        chunks = []
+        current_chunk = []
+        current_tokens = 0
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+                
+            # Add period back if it was removed
+            if not sentence.endswith('.'):
+                sentence += '.'
+            
+            sentence_tokens = self._count_tokens(sentence)
+            
+            # If a single sentence exceeds max_tokens, split it further
+            if sentence_tokens > max_tokens:
+                # If we have accumulated text, save it first
+                if current_chunk:
+                    chunks.append(' '.join(current_chunk))
+                    current_chunk = []
+                    current_tokens = 0
+                
+                # Split the long sentence by words
+                words = sentence.split()
+                word_chunk = []
+                word_tokens = 0
+                
+                for word in words:
+                    word_token_count = self._count_tokens(word + ' ')
+                    if word_tokens + word_token_count > max_tokens:
+                        if word_chunk:
+                            chunks.append(' '.join(word_chunk))
+                        word_chunk = [word]
+                        word_tokens = word_token_count
+                    else:
+                        word_chunk.append(word)
+                        word_tokens += word_token_count
+                
+                if word_chunk:
+                    chunks.append(' '.join(word_chunk))
+                continue
+            
+            # Check if adding this sentence would exceed the limit
+            if current_tokens + sentence_tokens > max_tokens:
+                # Save current chunk and start a new one
+                if current_chunk:
+                    chunks.append(' '.join(current_chunk))
+                current_chunk = [sentence]
+                current_tokens = sentence_tokens
+            else:
+                current_chunk.append(sentence)
+                current_tokens += sentence_tokens
+        
+        # Add the last chunk
+        if current_chunk:
+            chunks.append(' '.join(current_chunk))
+        
+        return chunks if chunks else [text[:max_tokens]]  # Fallback
+    
+    def _article_to_metadata(self, article: Article, chunk_index: int = 0, total_chunks: int = 1) -> Dict[str, Any]:
         """
         Convert article to metadata dictionary for ChromaDB.
         
         Args:
             article: Article object
+            chunk_index: Index of this chunk (0-based)
+            total_chunks: Total number of chunks for this article
             
         Returns:
             Metadata dictionary
@@ -79,6 +188,8 @@ class ChromaDBClient:
             "authors": json.dumps(article.authors),
             "meta_keywords": json.dumps(article.meta_keywords),
             "topics": json.dumps(article.topics) if article.topics else "[]",
+            "chunk_index": chunk_index,
+            "total_chunks": total_chunks,
         }
         
         # Add optional fields if they exist
@@ -96,6 +207,7 @@ class ChromaDBClient:
     def store_article(self, article: Article) -> bool:
         """
         Store a single article in the database.
+        Automatically chunks large articles to fit within embedding model limits.
         
         Args:
             article: Article object to store
@@ -104,20 +216,53 @@ class ChromaDBClient:
             True if successful, False otherwise
         """
         try:
-            # Prepare document content (combining title and content for embedding)
-            document = f"{article.title}\n\n{article.content}"
+            # Prepare full document content
+            full_document = f"{article.title}\n\n{article.content}"
             
-            # Prepare metadata
-            metadata = self._article_to_metadata(article)
+            # Check if document needs chunking
+            token_count = self._count_tokens(full_document)
             
-            # Add to collection
-            self._collection.add(
-                documents=[document],
-                metadatas=[metadata],
-                ids=[article.id]
-            )
+            if token_count <= self.MAX_EMBEDDING_TOKENS:
+                # Document fits within limits - store as-is
+                metadata = self._article_to_metadata(article, 0, 1)
+                
+                self._collection.add(
+                    documents=[full_document],
+                    metadatas=[metadata],
+                    ids=[article.id]
+                )
+                
+                logger.debug(f"Stored article: {article.title} (ID: {article.id}, tokens: {token_count})")
+            else:
+                # Document exceeds limits - chunk it
+                logger.info(f"Article '{article.title}' has {token_count} tokens, chunking required")
+                
+                # Chunk the content (not the title, to avoid repetition)
+                content_chunks = self._chunk_text(article.content, self.MAX_EMBEDDING_TOKENS - self._count_tokens(article.title) - 10)
+                
+                documents = []
+                metadatas = []
+                ids = []
+                
+                for i, chunk in enumerate(content_chunks):
+                    # Combine title with each chunk
+                    document = f"{article.title}\n\n{chunk}"
+                    metadata = self._article_to_metadata(article, i, len(content_chunks))
+                    chunk_id = f"{article.id}_chunk_{i}"
+                    
+                    documents.append(document)
+                    metadatas.append(metadata)
+                    ids.append(chunk_id)
+                
+                # Store all chunks
+                self._collection.add(
+                    documents=documents,
+                    metadatas=metadatas,
+                    ids=ids
+                )
+                
+                logger.info(f"Stored article '{article.title}' in {len(content_chunks)} chunks")
             
-            logger.debug(f"Stored article: {article.title} (ID: {article.id})")
             return True
             
         except Exception as e:
@@ -127,6 +272,7 @@ class ChromaDBClient:
     def store_articles(self, articles: List[Article]) -> Dict[str, int]:
         """
         Store multiple articles in the database.
+        Uses individual storage for each article to handle chunking properly.
         
         Args:
             articles: List of Article objects to store
@@ -141,39 +287,14 @@ class ChromaDBClient:
         success_count = 0
         failed_count = 0
         
-        try:
-            documents = []
-            metadatas = []
-            ids = []
-            
-            for article in articles:
-                try:
-                    # Prepare document content
-                    document = f"{article.title}\n\n{article.content}"
-                    metadata = self._article_to_metadata(article)
-                    
-                    documents.append(document)
-                    metadatas.append(metadata)
-                    ids.append(article.id)
-                    
-                except Exception as e:
-                    logger.error(f"Failed to prepare article {article.id}: {e}")
-                    failed_count += 1
-            
-            # Batch add to collection
-            if documents:
-                self._collection.add(
-                    documents=documents,
-                    metadatas=metadatas,
-                    ids=ids
-                )
-                success_count = len(documents)
-                logger.info(f"Successfully stored {success_count} articles")
-            
-        except Exception as e:
-            logger.error(f"Failed to store articles batch: {e}")
-            failed_count += len(articles) - success_count
+        # Store articles individually to handle chunking
+        for article in articles:
+            if self.store_article(article):
+                success_count += 1
+            else:
+                failed_count += 1
         
+        logger.info(f"Successfully stored {success_count} articles, {failed_count} failed")
         return {"success": success_count, "failed": failed_count}
     
     def get_article(self, article_id: str) -> Optional[Dict[str, Any]]:
@@ -343,3 +464,12 @@ class ChromaDBClient:
         except Exception as e:
             logger.error(f"Failed to reset collection: {e}")
             return False
+
+    def get_collection(self) -> Collection:
+        """
+        Get the underlying ChromaDB collection.
+        
+        Returns:
+            ChromaDB Collection object
+        """
+        return self._collection

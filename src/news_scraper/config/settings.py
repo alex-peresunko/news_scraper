@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     """Application settings."""
     
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(Path(__file__).resolve().parents[3] / ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore"
@@ -26,12 +26,16 @@ class Settings(BaseSettings):
     openai_model: str = Field(default="gpt-3.5-turbo", description="OpenAI model to use")
     openai_temperature: float = Field(default=0.1, description="OpenAI temperature")
     openai_max_tokens: int = Field(default=2000, description="OpenAI max tokens")
+
+    # LlamaIndex Configuration
+    llama_similarity_top_k: int = Field(default=5, description="LlamaIndex similarity top K")
+    llama_response_mode: str = Field(default="compact", description="LlamaIndex response mode")
     
     # Vector Database Configuration
     vector_db_path: str = Field(default="./data/chroma_db", description="Vector database path")
     vector_db_collection_name: str = Field(default="news_articles", description="Collection name")
     embedding_model: str = Field(
-        default="sentence-transformers/all-MiniLM-L6-v2", 
+        default="text-embedding-ada-002", 
         description="Embedding model"
     )
     

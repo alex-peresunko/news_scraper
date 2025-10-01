@@ -13,7 +13,7 @@ client = AsyncOpenAI(
     timeout=settings.request_timeout,
 )
 
-async def analyze_article_content(content: str) -> Tuple[str, List[str]]:
+async def analyze_article_content(request_id: str, content: str) -> Tuple[str, List[str]]:
     """
     Analyzes article content to generate a summary and identify main topics using OpenAI.
 
@@ -63,4 +63,5 @@ async def analyze_article_content(content: str) -> Tuple[str, List[str]]:
     except Exception as e:
         # In a real-world scenario, you'd want more robust error handling
         logger.error(f"An error occurred during GenAI analysis: {e}")
+        logger.debug(f"Request ID: {request_id}, Content: {content}")
         return "Could not generate summary.", []
