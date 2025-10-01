@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(description="OpenAI API key")
     openai_model: str = Field(default="gpt-3.5-turbo", description="OpenAI model to use")
     openai_temperature: float = Field(default=0.1, description="OpenAI temperature")
-    openai_max_tokens: int = Field(default=2000, description="OpenAI max tokens")
+    max_completion_tokens: int = Field(default=2000, description="OpenAI max tokens")
     
     # Vector Database Configuration
     vector_db_path: str = Field(default="./data/chroma_db", description="Vector database path")

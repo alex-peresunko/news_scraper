@@ -14,14 +14,6 @@ class Article(BaseModel):
     url: HttpUrl = Field(description="Article URL")
     title: str = Field(description="Article title")
     content: str = Field(description="Article content")
-    authors: List[str] = Field(default_factory=list, description="Article authors")
-    publish_date: Optional[datetime] = Field(default=None, description="Publication date")
-    scraped_at: datetime = Field(default_factory=datetime.utcnow, description="When article was scraped")
-    top_image: Optional[str] = Field(default=None, description="Top image URL")
-    meta_description: str = Field(default="", description="Meta description")
-    meta_keywords: List[str] = Field(default_factory=list, description="Meta keywords")
-    source_domain: str = Field(description="Source domain")
-    word_count: int = Field(default=0, description="Word count")
     summary: Optional[str] = Field(default=None, description="Article summary")
     topics: Optional[List[str]] = Field(default_factory=list, description="Article topics")
     
@@ -35,3 +27,10 @@ class Article(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+class ArticleAnalysis(BaseModel):
+    """A model to hold the structured analysis of a news article."""
+    title: str = Field(description="The title of the news article.")
+    content: str = Field(description="The full text content of the news article, extracted as plain text.")
+    summary: Optional[str] = Field(description="A concise summary of the key points of the article.")
+    topics: Optional[List[str]] = Field(description="A list of the main topics discussed in the article.")
