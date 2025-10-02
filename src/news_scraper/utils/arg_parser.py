@@ -38,5 +38,6 @@ class ArgParser:
         """
         return self.parser.parse_args()
 
+
 # Create a single instance for easy import
 arg_parser = ArgParser()

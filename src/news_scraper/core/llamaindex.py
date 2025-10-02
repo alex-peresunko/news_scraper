@@ -14,15 +14,16 @@ from news_scraper.db import ChromaDBClient
 # Configure the embedding model BEFORE creating any indices
 # This ensures LlamaIndex uses OpenAI embeddings (1536 dimensions)
 embed_model = OpenAIEmbedding(
-    model=settings.embedding_model,
-    api_key=settings.openai_api_key
+    model=settings.embedding_model, api_key=settings.openai_api_key
 )
 Settings.embed_model = embed_model
 
-# Get the db collection 
+# Get the db collection
 db = ChromaDBClient()
 chroma_collection = db.get_collection()
-logger.debug(f"Successfully loaded ChromaDB collection '{chroma_collection.name}' with {chroma_collection.count()} articles.")
+logger.debug(
+    f"Successfully loaded ChromaDB collection '{chroma_collection.name}' with {chroma_collection.count()} articles."
+)
 
 # Create a LlamaIndex VectorStore object
 # This acts as a wrapper around your ChromaDB collection.
@@ -44,9 +45,9 @@ logger.debug("LlamaIndex has now successfully connected to the ChromaDB vector s
 
 # Configure the LLM (this is separate from embeddings)
 llm = OpenAI(
-    model=settings.openai_model, 
-    temperature=settings.openai_temperature, 
-    api_key=settings.openai_api_key
+    model=settings.openai_model,
+    temperature=settings.openai_temperature,
+    api_key=settings.openai_api_key,
 )
 Settings.llm = llm
 
@@ -56,7 +57,7 @@ query_engine = index.as_query_engine(
     # You can configure how many top matching articles to retrieve.
     # This helps balance the thoroughness of the answer with speed and cost.
     similarity_top_k=settings.llama_similarity_top_k,
-    response_mode=settings.llama_response_mode  # "compact" or "tree_summarize"
+    response_mode=settings.llama_response_mode,  # "compact" or "tree_summarize"
 )
 
 logger.debug("Query engine is ready.")

@@ -13,7 +13,10 @@ client = AsyncOpenAI(
     timeout=settings.request_timeout,
 )
 
-async def analyze_article_content(request_id: str, content: str) -> Tuple[str, List[str]]:
+
+async def analyze_article_content(
+    request_id: str, content: str
+) -> Tuple[str, List[str]]:
     """Generate an abstractive summary and key topics for a news article.
 
     Args:
@@ -45,17 +48,20 @@ async def analyze_article_content(request_id: str, content: str) -> Tuple[str, L
         response = await client.chat.completions.create(
             model=settings.openai_model,
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that analyzes news articles."},
-                {"role": "user", "content": prompt}
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that analyzes news articles.",
+                },
+                {"role": "user", "content": prompt},
             ],
-            temperature=settings.openai_temperature
+            temperature=settings.openai_temperature,
         )
-        
+
         message_content = response.choices[0].message.content
         if message_content is None:
             raise ValueError("No content returned from OpenAI response.")
         analysis = message_content.strip()
-        
+
         # Parse the response to extract summary and topics
         summary = json.loads(analysis)["summary"] or "No summary available."
         topics_part = json.loads(analysis)["topics"] or []
