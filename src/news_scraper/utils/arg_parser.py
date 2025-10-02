@@ -16,18 +16,17 @@ class ArgParser:
     def _add_arguments(self):
         """Register scraping and query flags on the underlying parser."""
         self.parser.add_argument(
+            "-f",
             "--urls-file",
             type=str,
             required=False,
             help="Path to a text file containing URLs to scrape (one URL per line).",
         )
         self.parser.add_argument(
+            "-q",
             "--query",
-            type=str,
-            required=False,
-            default="What are the latest news articles?",
-            nargs="?",
-            help="Query string to ask the LLM about the scraped articles.",
+            action="store_true",
+            help="Query mode to ask the LLM about the scraped articles.",
         )
 
     def parse_args(self):

@@ -18,7 +18,7 @@ def main():
     args = arg_parser.parse_args()
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
 
-    if args.urls_file:
+    if args.urls_file is not None:
         logger.info("Scraping urls mode activated.")
 
         try:
@@ -71,9 +71,8 @@ def main():
         for art in all_articles:
             logger.debug(f"Article ID: {art['id']}, Title: {art['metadata']['title']}")
 
-    if args.query:
-        input_query = args.query
-        while input_query:
+    if args.query is not None:
+        while True:
             input_query = input("\n\nEnter your query (or 'exit' to quit): ").strip()
             if input_query.lower() == "exit":
                 logger.info("Exiting the application.")
@@ -92,6 +91,7 @@ def main():
                 print(
                     f"  - Retrieved article '{title}' with a similarity score of: {score:.4f}"
                 )
+            input_query = ""  # Reset to prompt for new input
 
 
 if __name__ == "__main__":
