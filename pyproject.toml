@@ -4,23 +4,6 @@ version = "0.0.1"
 description = "A simple news scraper application."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "beautifulsoup4",
-    "chromedriver-autoinstaller",
-    "chromadb",
-    "loguru",
-    "newspaper3k",
-    "openai",
-    "pydantic",
-    "pydantic-settings",
-    "selenium",
-    "lxml-html-clean",
-    "llama-index",
-    "llama-index-vector-stores-chroma",
-    "llama-index-llms-openai",
-    "llama-index-embeddings-openai",
-]
-
 [tool.setuptools.packages.find]
 where = ["src"]
 

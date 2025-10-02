@@ -1,8 +1,9 @@
 beautifulsoup4
-chromadb 
+chromadb
 chromedriver_autoinstaller
 llama_index
-loguru 
+llama-index-vector-stores-chroma
+loguru
 news_scraper
 newspaper3k
 openai
@@ -10,4 +11,4 @@ pydantic
 pydantic_settings
 selenium
 tiktoken
-llama-index-vector-stores-chroma
+lxml_html_clean
