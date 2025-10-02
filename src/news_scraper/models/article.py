@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, HttpUrl
 
 
 class Article(BaseModel):
-    """Article data model."""
+    """Structured representation of a scraped news article and model metadata."""
     
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique article ID")
     url: HttpUrl = Field(description="Article URL")
@@ -26,7 +26,10 @@ class Article(BaseModel):
     topics: Optional[List[str]] = Field(default_factory=list, description="Article topics")
     
     def __post_init__(self):
-        """Post-initialization processing."""
+        """Populate derived fields once the model is instantiated.
+
+        Calculates ``word_count`` lazily when the caller does not provide it.
+        """
         if self.word_count == 0:
             self.word_count = len(self.content.split())
     

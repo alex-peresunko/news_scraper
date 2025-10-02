@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings."""
+    """Centralised configuration for the scraper, loaded from environment variables."""
     
     model_config = SettingsConfigDict(
         env_file=str(Path(__file__).resolve().parents[3] / ".env"),
@@ -58,12 +58,20 @@ class Settings(BaseSettings):
 
     @property
     def project_root(self) -> Path:
-        """Get project root directory."""
+        """Get project root directory.
+
+        Returns:
+            Path: Absolute path to the repository root.
+        """
         return Path(__file__).parent.parent.parent.parent
     
     @property
     def data_dir(self) -> Path:
-        """Get data directory."""
+        """Get data directory.
+
+        Returns:
+            Path: Absolute path to the directory storing persisted data.
+        """
         data_path = Path(self.vector_db_path).parent
         if not data_path.is_absolute():
             data_path = self.project_root / data_path
@@ -71,14 +79,22 @@ class Settings(BaseSettings):
     
     @property
     def logs_dir(self) -> Path:
-        """Get logs directory."""
+        """Get logs directory.
+
+        Returns:
+            Path: Absolute path to the directory housing log files.
+        """
         log_path = Path(self.log_file).parent
         if not log_path.is_absolute():
             log_path = self.project_root / log_path
         return log_path
     
     def create_directories(self) -> None:
-        """Create necessary directories."""
+        """Create necessary directories for application data and logging.
+
+        Returns:
+            None: Directories are created on disk as a side effect.
+        """
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.logs_dir.mkdir(parents=True, exist_ok=True)
         

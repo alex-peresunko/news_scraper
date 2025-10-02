@@ -1,15 +1,20 @@
 import argparse
 
+
 class ArgParser:
-    """Application argument parser."""
+    """Encapsulate the CLI argument definition for the news scraper entry point."""
 
     def __init__(self, description="News Scraper Application"):
-        """Initializes the argument parser."""
+        """Initialise the parser with the shared description used across tooling.
+
+        Args:
+            description: Short text displayed in ``--help`` output.
+        """
         self.parser = argparse.ArgumentParser(description=description)
         self._add_arguments()
 
     def _add_arguments(self):
-        """Adds arguments to the parser."""
+        """Register scraping and query flags on the underlying parser."""
         self.parser.add_argument(
             "--urls-file",
             type=str,
@@ -26,7 +31,11 @@ class ArgParser:
         )
 
     def parse_args(self):
-        """Parses and returns command-line arguments."""
+        """Parse known arguments and provide an ``argparse.Namespace`` for consumers.
+
+        Returns:
+            argparse.Namespace: Parsed CLI arguments.
+        """
         return self.parser.parse_args()
 
 # Create a single instance for easy import

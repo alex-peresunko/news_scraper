@@ -1,6 +1,5 @@
-#! /usr/bin/env python3
-
 """Main entry point for the news scraper application."""
+
 from news_scraper.utils.arg_parser import arg_parser
 from news_scraper.utils.logging import logger
 from news_scraper.config.settings import settings_instance as settings
@@ -10,7 +9,11 @@ from news_scraper.utils.helpers import is_valid_url
 from news_scraper.core.llamaindex import query_engine
 
 def main():
-    """Main function to run the news scraper application."""
+    """Coordinate command-line workflows for scraping and querying news content.
+
+    Returns:
+        None: The function orchestrates side effects only.
+    """
     args = arg_parser.parse_args()
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
 
@@ -21,6 +24,7 @@ def main():
             with open(args.urls_file, "r", encoding="utf-8") as f:
                 urls = []
                 for line in f:
+                    # Accept only well-formed HTTP(S) URLs from the file, skipping comments or blanks.
                     if line.startswith("http") and is_valid_url(line.strip()):
                         urls.append(line.strip())
             if not urls:
@@ -37,6 +41,11 @@ def main():
         db = ChromaDBClient(db_path="./data/db", collection_name=settings.vector_db_collection_name)
 
         async def run_scraper():
+            """Execute the asynchronous scraping workflow and return collected articles.
+
+            Returns:
+                list[news_scraper.models.article.Article]: Collected article models.
+            """
             async with NewsScraper() as news_scraper:
                 articles = await news_scraper.scrape_urls(urls)
                 logger.info(f"Scraped {len(articles)} articles")

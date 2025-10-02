@@ -48,7 +48,14 @@ class ChromaDBClient:
         self._initialize_db()
     
     def _initialize_db(self) -> None:
-        """Initialize the ChromaDB client and collection."""
+        """Initialize the ChromaDB client and collection with OpenAI embeddings.
+
+        Returns:
+            None: Internal client and collection references are populated.
+
+        Raises:
+            Exception: Propagates any errors that prevent connecting to the store.
+        """
         try:
             # Initialize ChromaDB client with persistent storage
             self._client = chromadb.PersistentClient(

@@ -1,3 +1,5 @@
+"""Initialise LlamaIndex components backed by the persisted ChromaDB store."""
+
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.llms.openai import OpenAI

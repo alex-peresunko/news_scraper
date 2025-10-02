@@ -14,14 +14,17 @@ client = AsyncOpenAI(
 )
 
 async def analyze_article_content(request_id: str, content: str) -> Tuple[str, List[str]]:
-    """
-    Analyzes article content to generate a summary and identify main topics using OpenAI.
+    """Generate an abstractive summary and key topics for a news article.
 
     Args:
-        content: The text content of the article.
+        request_id: Identifier used for correlating logs and tracing failures.
+        content: The article body to analyze.
 
     Returns:
-        A tuple containing the generated summary and a list of topics.
+        Tuple[str, List[str]]: The AI-generated summary and the list of topical labels.
+
+    Raises:
+        ValueError: If the model returns an empty response payload.
     """
     prompt = f"""
     Please analyze the following article content and provide:

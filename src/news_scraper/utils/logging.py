@@ -14,12 +14,15 @@ def setup_logging(
     log_file: Optional[str] = None,
     log_format: Optional[str] = None
 ) -> None:
-    """Setup logging configuration.
+    """Setup logging configuration for both console and rotating file sinks.
     
     Args:
         log_level: Logging level (defaults to settings.log_level)
         log_file: Log file path (defaults to settings.log_file)
         log_format: Log format (defaults to settings.log_format)
+
+    Returns:
+        None: The configuration is applied as a side effect to the global logger.
     """
     # Use settings defaults if not provided
     log_level = log_level or settings.log_level
@@ -75,7 +78,11 @@ class LoggerMixin:
     
     @property
     def logger(self):
-        """Get logger for this class."""
+        """Get logger for this class.
+
+        Returns:
+            loguru.Logger: Child logger bound to the class name.
+        """
         return logger.bind(name=self.__class__.__name__)
 
 
